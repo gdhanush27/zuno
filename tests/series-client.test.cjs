@@ -111,6 +111,10 @@ test("search filtering and name sorting is natural, case-insensitive and bidirec
     searchEntries(entries, "EPISODE", "asc").map((entry) => entry.url),
     [`${base}/download/1`, `${base}/download/2`, `${base}/download/10`],
   );
+  assert.deepEqual(
+    searchEntries(entries, "episode", "default").map((entry) => entry.title),
+    ["Episode 10", "Episode 2", "Episode 1"],
+  );
   assert.deepEqual(searchEntries(entries, "missing", "asc"), []);
   // Sorting must not mutate the caller's array order.
   assert.equal(entries[0].title, "Episode 10");

@@ -1,25 +1,31 @@
 import { DomUtils, parseDocument } from "htmlparser2";
 
 export const DEFAULT_BASE = "https://moviezda.com";
+export const SOURCE_LIST_URL =
+  "https://raw.githubusercontent.com/gdhanush27/Notes/refs/heads/main/For_me/tws/site.txt";
 export type Entry = { title: string; url: string; kind: "folder" | "episode" };
 export type Result = { episode: Entry; link?: string; error?: string };
 export type Page = { text: string; url: string };
 export type Transport = (url: string, signal: AbortSignal) => Promise<Page>;
 
+const PAGE_CONCURRENCY = 6;
+
 export function searchEntries(
   entries: readonly Entry[],
   query: string,
-  order: "asc" | "desc",
+  order: "default" | "asc" | "desc",
 ): Entry[] {
-  return entries
-    .filter((entry) => entry.title.toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => {
-      const comparison = a.title.localeCompare(b.title, "en", {
-        sensitivity: "base",
-        numeric: true,
-      });
-      return order === "asc" ? comparison : -comparison;
+  const filtered = entries.filter((entry) =>
+    entry.title.toLowerCase().includes(query.toLowerCase()),
+  );
+  if (order === "default") return filtered;
+  return filtered.sort((a, b) => {
+    const comparison = a.title.localeCompare(b.title, "en", {
+      sensitivity: "base",
+      numeric: true,
     });
+    return order === "asc" ? comparison : -comparison;
+  });
 }
 
 export function normalizeBase(value: string): string {
@@ -169,6 +175,23 @@ const nativeTransport: Transport = async (url, signal) => {
   return { text: await response.text(), url: response.url || url };
 };
 
+/** Reads the published site list so a domain change does not need an app update. */
+export async function fetchRemoteBase(signal: AbortSignal): Promise<string> {
+  const response = await fetch(`${SOURCE_LIST_URL}?t=${Date.now()}`, {
+    signal,
+    cache: "no-store",
+    headers: { Accept: "text/plain", "Cache-Control": "no-cache" },
+  });
+  if (!response.ok)
+    throw new Error(`HTTP ${response.status} while reading the site list.`);
+  const line = (await response.text())
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .find((entry) => entry && !entry.startsWith("#"));
+  if (!line) throw new Error("The site list is empty.");
+  return normalizeBase(line);
+}
+
 export class SeriesClient {
   readonly baseUrl: string;
   private cache = new Map<string, Entry[]>();
@@ -218,13 +241,29 @@ export class SeriesClient {
     const first = await this.fetchPage(url, signal);
     const parsed = parsePage(first.text, first.url);
     const entries = parsed.entries;
-    for (let page = 2; page <= parsed.total; page++) {
-      checkCancelled(signal);
-      progress(`Loading page ${page} of ${parsed.total}…`);
-      const next = new URL(url);
-      next.searchParams.set(catalog ? "get-page" : "page", String(page));
-      const response = await this.fetchPage(next.href, signal);
-      entries.push(...parsePage(response.text, response.url).entries);
+    const remaining = parsed.total - 1;
+    if (remaining > 0) {
+      const pages: Entry[][] = new Array(remaining);
+      let next = 2;
+      let done = 0;
+      progress(`Loading page 1 of ${parsed.total}…`);
+      const worker = async () => {
+        for (;;) {
+          const page = next++;
+          if (page > parsed.total) return;
+          checkCancelled(signal);
+          const target = new URL(url);
+          target.searchParams.set(catalog ? "get-page" : "page", String(page));
+          const response = await this.fetchPage(target.href, signal);
+          pages[page - 2] = parsePage(response.text, response.url).entries;
+          done++;
+          progress(`Loading page ${done + 1} of ${parsed.total}…`);
+        }
+      };
+      await Promise.all(
+        Array.from({ length: Math.min(PAGE_CONCURRENCY, remaining) }, worker),
+      );
+      for (const page of pages) if (page) entries.push(...page);
     }
     const unique = [
       ...new Map(
