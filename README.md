@@ -1,50 +1,72 @@
-# Tamil Web Series
+# Zuno — Stream Anywhere
 
-Created by [gdhanush27](https://github.com/gdhanush27).
+<p align="center">
+  <img src="./assets/docs/readme_hero.png" alt="Zuno — Stream Anywhere" width="100%" />
+</p>
 
-An Expo SDK 57 app ported from `app.py`. Website requests and HTML parsing run directly on the device, with no Python runtime, account, cloud storage, proxy, or custom API server.
+Your series, your phone, your rules. Zuno finds episodes, lines them up, and keeps your favourites ready to watch even when the signal drops.
 
-Catalog, series, season, and episode searches support natural A-Z and Z-A sorting. Episodes can be resolved, played, and downloaded. Download files and metadata stay on the device and remain available from the Downloads tab.
+No accounts. No clutter. Just search, tap, and press play.
 
-## App flow
+## Why you'll like it
 
-1. Enter a source domain.
-2. Search the catalog and browse series, seasons, and folders.
-3. Select episodes individually, select all visible episodes, or enter ranges such as `1-3,5-6`.
-4. Resolve links with progress, cancellation, and retry support.
-5. Play resolved media or download episodes for local playback.
+- **Find it fast** — search across catalogs, series, and seasons with smart A-Z sorting.
+- **Binge without breaks** — next and previous controls roll straight into the following episode.
+- **Watch offline** — saved episodes play from your device, no connection required.
+- **Pick up where you left off** — Zuno remembers your spot in every episode.
+- **Stays yours** — everything lives on your phone, and deleting a download really deletes it.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="./assets/docs/home.png" alt="Home" width="100%" /></td>
+    <td align="center" width="33%"><img src="./assets/docs/link_fetching.png" alt="Link fetching" width="100%" /></td>
+    <td align="center" width="33%"><img src="./assets/docs/player.png" alt="Player" width="100%" /></td>
+  </tr>
+  <tr>
+    <td align="center">Home</td>
+    <td align="center">Link fetching</td>
+    <td align="center">Player</td>
+  </tr>
+</table>
+
+## How it works
+
+1. Point Zuno at your source.
+2. Browse or search until something catches your eye.
+3. Tap the episodes you want.
+4. Let Zuno fetch the links.
+5. Press play, or save them for the road.
 
 ## Get started
-
-Install dependencies and start Expo:
 
 ```powershell
 npm install
 npm start
 ```
 
-To build and run Android locally, install Android Studio and an Android SDK, then run:
+Run it on Android:
 
 ```powershell
 npm run android
 ```
 
-For an existing development client, start Metro with:
+Already have a development build installed?
 
 ```powershell
 npm run start:dev
 ```
 
-## Runtime notes
+## Good to know
 
-- Android and iOS make source requests directly. Native requests are not subject to browser CORS, but redirects, cookies, TLS, regional restrictions, and browser verification can still prevent access.
-- Web displays an unsupported message and does not make catalog requests.
-- Navigation, listings, selections, and resolved results are session-only.
-- Downloaded files and their AsyncStorage metadata remain local to the device. Deleting a download removes both.
-- Keep the app foregrounded while resolving or downloading. Media links may expire or require source cookies.
-- Access only sources and content you are authorized to use.
+- Zuno is built for Android and iOS. The web version is along for the ride, not the show.
+- Keep the app open while links are loading or downloads are running.
+- Streaming links can expire. If one goes stale, Zuno simply fetches a fresh one.
+- Browsing history and search results reset when you close the app. Downloads stay put.
+- Please use Zuno only with content you have the right to access.
 
-## Validation
+## Before you ship
 
 ```powershell
 npm test
@@ -52,6 +74,8 @@ npm run typecheck
 npm run lint
 ```
 
-The offline tests cover parsing and link resolution. Playback, downloads, sharing, clipboard behavior, and live-site networking require device testing.
+The suite covers the logic. Playback, downloads, and sharing deserve a real device and a comfortable chair.
 
-The main implementation is in `src/components/series-browser.tsx` and `src/lib/series-client.ts`. The original `app.py` remains unchanged.
+## License
+
+Zuno is released under the [GNU General Public License v3.0](LICENSE) or later.
