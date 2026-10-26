@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { File, Paths } from "expo-file-system";
+import { File, Paths, type DownloadTask } from "expo-file-system";
 import {
     createContext,
     ReactNode,
@@ -86,6 +86,8 @@ function useSeriesStore() {
   const mounted = useRef(true);
   const retry = useRef<(() => void) | null>(null);
   const baseEdited = useRef(false);
+  const activeTask = useRef<DownloadTask | null>(null);
+  const cancelledUrls = useRef(new Set<string>());
 
   const current = folders[folders.length - 1];
   const heading = folders.map((folder) => folder.title).join(" › ");
@@ -367,7 +369,9 @@ function useSeriesStore() {
               );
           },
         });
+        activeTask.current = task;
         const file = await task.downloadAsync();
+        if (cancelledUrls.current.has(episodeUrl)) return;
         if (!file || !file.exists)
           throw new Error("The downloaded file could not be found.");
         const record: DownloadedEpisode = {
@@ -394,6 +398,10 @@ function useSeriesStore() {
         toast(`${queued.episode.title} saved.`, { tone: "success" });
       } catch (exception) {
         if (destination.exists) destination.delete();
+        if (cancelledUrls.current.has(episodeUrl)) {
+          cancelledUrls.current.delete(episodeUrl);
+          return;
+        }
         setQueue((items) =>
           items.map((item) =>
             item.episode.url === episodeUrl
@@ -403,6 +411,7 @@ function useSeriesStore() {
         );
         toast(`Download failed: ${queued.episode.title}`, { tone: "error" });
       } finally {
+        activeTask.current = null;
         setActiveDownloadUrl(null);
       }
     })();
@@ -420,7 +429,10 @@ function useSeriesStore() {
 
   const removeQueued = useCallback(
     (episodeUrl: string) => {
-      if (episodeUrl === activeDownloadUrl) return;
+      if (episodeUrl === activeDownloadUrl) {
+        cancelledUrls.current.add(episodeUrl);
+        activeTask.current?.cancel();
+      }
       setQueue((items) =>
         items.filter((item) => item.episode.url !== episodeUrl),
       );
@@ -498,12 +510,6 @@ function useSeriesStore() {
     [downloads],
   );
 
-  const changeBase = useCallback((value: string) => {
-    baseEdited.current = true;
-    setBase(value);
-    void AsyncStorage.setItem(BASE_KEY, value);
-  }, []);
-
   const refreshBase = useCallback(async () => {
     setCheckingBase(true);
     const controller = new AbortController();
@@ -528,7 +534,6 @@ function useSeriesStore() {
 
   return {
     base,
-    setBase: changeBase,
     refreshBase,
     checkingBase,
     resolveDownload,

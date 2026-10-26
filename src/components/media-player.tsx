@@ -1,11 +1,14 @@
 import { useEventListener } from "expo";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, IconButton } from "@/components/ui";
-import { color, space } from "@/constants/theme";
+import { palettes, playerColor, space } from "@/constants/theme";
+
+// The player is always dark, so its shared controls opt out of the app theme.
+const chrome = palettes.dark;
 
 export function MediaPlayer({
   source,
@@ -49,16 +52,18 @@ export function MediaPlayer({
     }
     if (next === "readyToPlay") {
       setStatus("ready");
-      if (!resumed.current && startAt > 0) {
-        resumed.current = true;
-        try {
-          player.currentTime = startAt;
-        } catch {
-          // The player can be released while seeking during a fast close.
-        }
-      }
     }
   });
+
+  useEffect(() => {
+    if (status !== "ready" || resumed.current || startAt <= 0) return;
+    resumed.current = true;
+    try {
+      player.currentTime = startAt;
+    } catch {
+      // The player can be released while seeking during a fast close.
+    }
+  }, [player, startAt, status]);
 
   useEventListener(player, "timeUpdate", ({ currentTime }) => {
     onProgress(currentTime);
@@ -74,6 +79,7 @@ export function MediaPlayer({
         <IconButton
           icon="chevron-down"
           label="Close player"
+          palette={chrome}
           onPress={onClose}
         />
         <Text numberOfLines={2} style={styles.title}>
@@ -90,7 +96,7 @@ export function MediaPlayer({
         />
         {status === "loading" ? (
           <View pointerEvents="none" style={styles.overlay}>
-            <ActivityIndicator color={color.accent} size="large" />
+            <ActivityIndicator color={playerColor.accent} size="large" />
             <Text style={styles.overlayText}>
               {startAt > 0 ? "Resuming…" : "Buffering…"}
             </Text>
@@ -103,6 +109,7 @@ export function MediaPlayer({
             <Button
               title="Retry"
               icon="refresh"
+              palette={chrome}
               onPress={() => {
                 setStatus("loading");
                 player.replace(source);
@@ -116,6 +123,7 @@ export function MediaPlayer({
         <Button
           title="Previous"
           icon="play-skip-back"
+          palette={chrome}
           disabled={!onPrevious}
           onPress={() => onPrevious?.()}
         />
@@ -129,6 +137,7 @@ export function MediaPlayer({
                   ? "Download queued"
                   : "Download for offline use"
             }
+            palette={chrome}
             disabled={downloadState !== "download"}
             onPress={() => onDownload?.()}
           />
@@ -136,6 +145,7 @@ export function MediaPlayer({
         <Button
           title="Next"
           icon="play-skip-forward"
+          palette={chrome}
           disabled={!onNext}
           onPress={() => onNext?.()}
         />
@@ -145,22 +155,32 @@ export function MediaPlayer({
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#05080F" },
+  screen: { flex: 1, backgroundColor: playerColor.screen },
   toolbar: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.sm,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: playerColor.border,
   },
-  title: { flex: 1, color: color.text, fontSize: 16, fontWeight: "700" },
+  title: {
+    flex: 1,
+    color: playerColor.text,
+    fontSize: 14,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+  },
   stage: { flex: 1, justifyContent: "center" },
   actions: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: space.sm,
-    padding: space.sm,
+    padding: space.md,
+    borderTopWidth: 1,
+    borderTopColor: playerColor.border,
   },
   video: { flex: 1, width: "100%", backgroundColor: "#000" },
   overlay: {
@@ -173,13 +193,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: space.md,
     padding: space.xl,
-    backgroundColor: "rgba(5,8,15,0.8)",
+    backgroundColor: playerColor.overlay,
   },
   overlayText: {
-    color: color.muted,
-    fontSize: 14,
+    color: playerColor.muted,
+    fontSize: 13,
     textAlign: "center",
     lineHeight: 21,
+    maxWidth: 360,
   },
-  errorTitle: { color: color.error, fontSize: 18, fontWeight: "800" },
+  errorTitle: {
+    color: playerColor.error,
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+  },
 });

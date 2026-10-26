@@ -324,7 +324,7 @@ export function buildReport(
   const success = results.filter((result) => result.link).length;
   const lines = [
     "=".repeat(72),
-    "Tamil Web Series - DOWNLOAD LINKS",
+    "Zuno - DOWNLOAD LINKS",
     "=".repeat(72),
     "Created by gdhanush27 | https://github.com/gdhanush27",
     `Selection: ${heading}`,

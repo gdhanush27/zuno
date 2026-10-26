@@ -5,7 +5,6 @@ import {
     Alert,
     BackHandler,
     FlatList,
-    Linking,
     Platform,
     Pressable,
     RefreshControl,
@@ -15,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { HomeHeader, SourceRow } from "@/components/home";
 import { useToast } from "@/components/toast";
 import {
     Button,
@@ -25,9 +25,10 @@ import {
     Segmented,
     SkeletonList,
 } from "@/components/ui";
-import { color, radius, space } from "@/constants/theme";
+import { radius, space, type Palette } from "@/constants/theme";
 import { useSeries, type SortOrder } from "@/context/series-store";
-import { DEFAULT_BASE, errorMessage, type Entry } from "@/lib/series-client";
+import { useThemeColor, useThemedStyles } from "@/context/theme-store";
+import { DEFAULT_BASE, type Entry } from "@/lib/series-client";
 
 const SORTS = [
   { value: "default" as SortOrder, label: "Default" },
@@ -38,10 +39,11 @@ const SORTS = [
 export default function BrowseScreen() {
   const router = useRouter();
   const toast = useToast();
+  const color = useThemeColor();
+  const styles = useThemedStyles(createStyles);
   const store = useSeries();
   const {
     base,
-    setBase,
     current,
     folders,
     heading,
@@ -51,7 +53,6 @@ export default function BrowseScreen() {
     busy,
     progress,
     error,
-    setError,
     retry,
     patchFolder,
     load,
@@ -132,7 +133,11 @@ export default function BrowseScreen() {
     return (
       <SafeAreaView style={styles.screen}>
         <View style={styles.list}>
-          <Brand />
+          <HomeHeader
+            brand="ZUNO"
+            title="One place. Every episode."
+            subtitle="Browse. Select. Export. Straight from your phone."
+          />
           <Card>
             <Text style={styles.eyebrow}>MOBILE ONLY</Text>
             <Text style={styles.cardTitle}>Open in Expo Go</Text>
@@ -151,35 +156,18 @@ export default function BrowseScreen() {
     return (
       <SafeAreaView style={styles.screen}>
         <View style={styles.list}>
-          <Brand />
-          <Text style={styles.title}>One place. Every episode.</Text>
-          <Text style={styles.subtitle}>
-            Browse. Select. Export. Straight from your phone.
-          </Text>
+          <HomeHeader
+            brand="ZUNO"
+            title="One place. Every episode."
+            subtitle="Browse. Select. Export. Straight from your phone."
+          />
           <Card>
-            <Text style={styles.eyebrow}>01 / CONNECT YOUR SOURCE</Text>
-            <View style={styles.cardHead}>
-              <Text style={[styles.cardTitle, styles.grow]}>
-                Website address
-              </Text>
-              <IconButton
-                icon="cloud-download-outline"
-                label="Check for a new website address"
-                onPress={() => void refreshBase()}
-                disabled={busy || checkingBase}
-              />
-            </View>
-            <Field
-              label="Website address"
-              value={base}
-              onChangeText={setBase}
-              editable={!busy}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              placeholder={DEFAULT_BASE}
-              returnKeyType="go"
-              onSubmitEditing={() => void load()}
+            <Text style={styles.eyebrow}>01 / SOURCE</Text>
+            <SourceRow
+              base={base || DEFAULT_BASE}
+              checking={checkingBase}
+              disabled={busy}
+              onRefresh={() => void refreshBase()}
             />
             <Button
               title={busy ? progress || "Connecting…" : "Browse series"}
@@ -189,8 +177,8 @@ export default function BrowseScreen() {
               onPress={() => void load()}
             />
             <Text style={styles.small}>
-              Session only. No account, no backend. Use sources you have
-              permission to access.
+              The source address is fetched automatically. Session only. No
+              account, no backend. Use sources you have permission to access.
             </Text>
           </Card>
           {error ? (
@@ -420,28 +408,9 @@ export default function BrowseScreen() {
   );
 }
 
-function Brand() {
-  return (
-    <View style={styles.topline}>
-      <Text style={styles.brand}>TAMIL WEB SERIES</Text>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel="Created by gdhanush27. Open GitHub profile"
-        hitSlop={8}
-        onPress={() => {
-          void Linking.openURL("https://github.com/gdhanush27").catch(
-            (exception) =>
-              Alert.alert("Could not open GitHub", errorMessage(exception)),
-          );
-        }}
-      >
-        <Text style={styles.pill}>@gdhanush27 ↗</Text>
-      </Pressable>
-    </View>
-  );
-}
 
-const styles = StyleSheet.create({
+function createStyles(color: Palette) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   grow: { flex: 1 },
   list: {
@@ -453,51 +422,28 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   header: { gap: space.md, marginBottom: space.sm },
-  topline: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: space.md,
-  },
-  brand: {
+  cardTitle: {
     color: color.text,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 2,
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.3,
   },
-  pill: {
-    color: color.accent,
-    backgroundColor: "#1E2C1B",
-    paddingHorizontal: space.md,
-    paddingVertical: 7,
-    borderRadius: radius.pill,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  title: {
-    color: color.text,
-    fontSize: 36,
-    lineHeight: 42,
-    fontWeight: "800",
-    letterSpacing: -1,
-  },
-  subtitle: {
-    color: color.muted,
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: space.xs,
-  },
-  cardTitle: { color: color.text, fontSize: 18, fontWeight: "700" },
   cardHead: { flexDirection: "row", alignItems: "center", gap: space.sm },
   eyebrow: {
-    color: color.accent,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1.4,
+    color: color.taupe,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
   },
-  body: { color: color.muted, fontSize: 15, lineHeight: 23 },
+  body: { color: color.muted, fontSize: 14, lineHeight: 22 },
   small: { color: color.muted, fontSize: 12, lineHeight: 18 },
-  link: { color: color.accent, fontSize: 12, fontWeight: "800" },
+  link: {
+    color: color.text,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+  },
   row: { flexDirection: "row", alignItems: "center", gap: space.sm },
   metaRow: {
     flexDirection: "row",
@@ -511,57 +457,79 @@ const styles = StyleSheet.create({
     gap: space.xs,
   },
   crumbRow: { flexDirection: "row", alignItems: "center", gap: space.xs },
-  crumbs: { flex: 1, color: color.text, fontSize: 16, fontWeight: "700" },
+  crumbs: {
+    flex: 1,
+    color: color.text,
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 21,
+  },
   busyRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.sm,
     padding: space.md,
-    borderRadius: radius.md,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: color.border,
     backgroundColor: color.card,
   },
-  errorCard: { borderColor: "#5A2B33", backgroundColor: color.errorBg },
-  errorText: { color: color.error, fontSize: 14, lineHeight: 21 },
+  errorCard: { borderColor: color.errorBg, backgroundColor: color.errorBg },
+  errorText: { color: color.error, fontSize: 13, lineHeight: 20 },
   entry: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
-    padding: space.md,
-    borderRadius: radius.md,
+    paddingVertical: space.md,
+    paddingHorizontal: space.md,
+    borderRadius: radius.sm,
     backgroundColor: color.card,
     borderWidth: 1,
-    borderColor: "transparent",
+    borderColor: color.border,
     minHeight: 64,
   },
   entrySelected: { borderColor: color.accent, backgroundColor: color.raised },
   entryPressed: { backgroundColor: color.raised },
-  entryTitle: { color: color.text, fontSize: 15, fontWeight: "600" },
+  entryTitle: {
+    color: color.text,
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 21,
+  },
   entryMeta: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: space.xs,
-    marginTop: 3,
+    marginTop: 4,
   },
   tag: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.pill,
-    backgroundColor: color.raised,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: color.rule,
   },
-  tagSaved: { backgroundColor: "#1E2C1B" },
-  tagText: { color: color.muted, fontSize: 10, fontWeight: "800" },
+  tagSaved: { borderColor: color.accent },
+  tagText: {
+    color: color.muted,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
   tagTextSaved: { color: color.accent },
   number: {
     color: color.faint,
-    fontSize: 12,
-    fontWeight: "800",
-    width: 24,
-    textAlign: "center",
+    fontSize: 11,
+    fontWeight: "600",
+    width: 22,
+    textAlign: "left",
+    letterSpacing: 0.5,
   },
-  marker: { width: 26, alignItems: "center" },
+  marker: { width: 24, alignItems: "flex-end" },
   dock: {
     position: "absolute",
     left: 0,
@@ -569,8 +537,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     flexDirection: "row",
     padding: space.md,
-    backgroundColor: color.card,
+    backgroundColor: color.bg,
     borderTopWidth: 1,
-    borderTopColor: color.border,
+    borderTopColor: color.rule,
   },
-});
+  });
+}

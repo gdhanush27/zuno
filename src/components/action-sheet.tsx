@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { color, radius, space } from "@/constants/theme";
+import { space, type Palette } from "@/constants/theme";
+import { useThemeColor, useThemedStyles } from "@/context/theme-store";
 
 export type SheetAction = {
   label: string;
@@ -23,6 +24,8 @@ export function ActionSheet({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const color = useThemeColor();
+  const styles = useThemedStyles(createStyles);
   return (
     <Modal
       visible={visible}
@@ -68,41 +71,46 @@ export function ActionSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(4,7,13,0.65)" },
+function createStyles(color: Palette) {
+  return StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: color.backdrop },
   sheet: {
-    backgroundColor: color.card,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    backgroundColor: color.bg,
     borderTopWidth: 1,
-    borderColor: color.border,
+    borderColor: color.rule,
     paddingHorizontal: space.lg,
-    paddingTop: space.sm,
-    gap: space.xs,
+    paddingTop: space.md,
+    gap: 0,
   },
   handle: {
     alignSelf: "center",
-    width: 40,
-    height: 4,
-    borderRadius: radius.pill,
-    backgroundColor: color.border,
-    marginBottom: space.sm,
+    width: 32,
+    height: 2,
+    backgroundColor: color.rule,
+    marginBottom: space.md,
   },
   title: {
     color: color.muted,
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: "700",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
     paddingVertical: space.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: color.border,
+    marginBottom: space.xs,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
-    minHeight: 52,
-    paddingHorizontal: space.xs,
-    borderRadius: radius.md,
+    minHeight: 56,
+    paddingHorizontal: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: color.border,
   },
   pressed: { backgroundColor: color.raised },
-  rowText: { color: color.text, fontSize: 16, fontWeight: "600" },
+  rowText: { color: color.text, fontSize: 15, fontWeight: "500" },
   destructive: { color: color.error },
-});
+  });
+}

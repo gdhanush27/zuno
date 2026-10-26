@@ -1,19 +1,23 @@
 {
   "expo": {
-    "name": "Tamil Web Series",
-    "slug": "MyApp",
+    "name": "Zuno",
+    "slug": "zuno",
     "version": "1.0.0",
     "extra": {
       "author": "gdhanush27",
       "githubUrl": "https://github.com/gdhanush27",
-      "router": {},
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
       "eas": {
-        "projectId": "5b588e95-0263-48bb-9668-6e3c41839f69"
+        "projectId": "20ecbe7a-bb54-4dc3-9953-040248a9974e"
       }
     },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "zuno",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0C111B",
     "ios": {
@@ -28,7 +32,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.gdhanush270.tamilWebSeries"
+      "package": "com.gdhanush270.zuno"
     },
     "web": {
       "output": "static",
@@ -50,6 +54,7 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "owner": "gdhanush270"
   }
 }

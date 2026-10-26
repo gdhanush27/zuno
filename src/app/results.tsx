@@ -14,8 +14,9 @@ import {
     ProgressBar,
     SkeletonList,
 } from "@/components/ui";
-import { color, radius, space } from "@/constants/theme";
+import { radius, space, type Palette } from "@/constants/theme";
 import { useSeries } from "@/context/series-store";
+import { useThemeColor, useThemedStyles } from "@/context/theme-store";
 import { compareEpisodeTitles } from "@/lib/media-library";
 import { errorMessage, type Result } from "@/lib/series-client";
 
@@ -32,6 +33,8 @@ function displayUrl(value: string): string {
 export default function ResultsScreen() {
   const router = useRouter();
   const toast = useToast();
+  const color = useThemeColor();
+  const styles = useThemedStyles(createStyles);
   const { batch, busy, progress, cancel, resolve, enqueue, queue, downloads } =
     useSeries();
   const [menu, setMenu] = useState<Result | null>(null);
@@ -156,7 +159,7 @@ export default function ResultsScreen() {
               icon="refresh"
               onPress={() => void resolve(pending, batch)}
             />
-          ) : null
+          ) : undefined
         }
         renderItem={({ item, index }) => {
           const queued = queue.find(
@@ -253,7 +256,8 @@ export default function ResultsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(color: Palette) {
+  return StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   grow: { flex: 1 },
   list: {
@@ -266,27 +270,44 @@ const styles = StyleSheet.create({
   },
   header: { gap: space.md, marginBottom: space.sm },
   crumbRow: { flexDirection: "row", alignItems: "center", gap: space.xs },
-  title: { color: color.text, fontSize: 26, fontWeight: "800" },
-  summary: { color: color.text, fontSize: 14, fontWeight: "600" },
+  title: {
+    color: color.text,
+    fontSize: 26,
+    fontWeight: "700",
+    letterSpacing: -0.8,
+  },
+  summary: { color: color.text, fontSize: 13, fontWeight: "500" },
   row: { flexDirection: "row", alignItems: "center", gap: space.sm },
   card: {
     padding: space.md,
-    borderRadius: radius.md,
+    borderRadius: radius.sm,
     backgroundColor: color.card,
     borderWidth: 1,
     borderColor: color.border,
     gap: space.sm,
   },
   cardHead: { flexDirection: "row", alignItems: "flex-start", gap: space.sm },
-  rowTitle: { color: color.text, fontSize: 15, fontWeight: "700" },
-  eyebrow: {
-    color: color.accent,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-    marginBottom: 3,
+  rowTitle: {
+    color: color.text,
+    fontSize: 15,
+    fontWeight: "600",
+    lineHeight: 21,
   },
-  url: { color: color.faint, fontSize: 12, marginTop: 3 },
+  eyebrow: {
+    color: color.taupe,
+    fontSize: 9,
+    fontWeight: "700",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  url: {
+    color: color.faint,
+    fontSize: 11,
+    marginTop: 4,
+    letterSpacing: 0.2,
+  },
   small: { color: color.muted, fontSize: 12, lineHeight: 18 },
-  error: { color: color.error, fontSize: 12, lineHeight: 18, marginTop: 3 },
-});
+  error: { color: color.error, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  });
+}

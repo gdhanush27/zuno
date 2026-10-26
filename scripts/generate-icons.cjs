@@ -4,7 +4,7 @@ const path = require("node:path");
 const sharp = require("sharp");
 
 const assets = path.resolve(__dirname, "../assets/images");
-const source = path.join(assets, "tamil-logo.png");
+const source = path.resolve(__dirname, "../ICON.png");
 const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
 
 async function squareArtwork(size, artworkSize) {

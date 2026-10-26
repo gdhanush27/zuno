@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MediaPlayer } from "@/components/media-player";
 import { IconButton } from "@/components/ui";
-import { color, space } from "@/constants/theme";
+import { palettes, playerColor, space } from "@/constants/theme";
 import { useSeries } from "@/context/series-store";
 import { compareEpisodeTitles } from "@/lib/media-library";
 import type { Entry } from "@/lib/series-client";
@@ -13,6 +13,9 @@ import type { Entry } from "@/lib/series-client";
 type PlayerEpisode = {
   episode: Entry;
 };
+
+// Loading chrome sits on the always-dark player canvas.
+const chrome = palettes.dark;
 
 export default function PlayerScreen() {
   const router = useRouter();
@@ -83,12 +86,8 @@ export default function PlayerScreen() {
   }, [episodeUrl, startAt]);
 
   useEffect(() => {
-    if (localSource) {
-      setResolveError("");
-      return;
-    }
+    if (localSource) return;
     const controller = new AbortController();
-    setResolveError("");
     void resolveEpisodeLink(episodeUrl, controller.signal)
       .then((nextSource) => {
         if (!controller.signal.aborted)
@@ -126,10 +125,11 @@ export default function PlayerScreen() {
           <IconButton
             icon="close"
             label="Close player"
+            palette={chrome}
             onPress={() => router.back()}
           />
           {resolveError ? null : (
-            <ActivityIndicator color={color.accent} size="large" />
+            <ActivityIndicator color={playerColor.accent} size="large" />
           )}
           <Text style={styles.text}>
             {resolveError || `Loading ${current.episode.title}…`}
@@ -138,12 +138,14 @@ export default function PlayerScreen() {
             <IconButton
               icon="play-skip-back"
               label="Previous episode"
+              palette={chrome}
               disabled={index === 0}
               onPress={() => move(index - 1)}
             />
             <IconButton
               icon="play-skip-forward"
               label="Next episode"
+              palette={chrome}
               disabled={index >= playlist.length - 1}
               onPress={() => move(index + 1)}
             />
@@ -185,13 +187,26 @@ export default function PlayerScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#05080F" },
+  screen: { flex: 1, backgroundColor: playerColor.screen },
   missing: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: space.md,
+    padding: space.lg,
   },
-  text: { color: color.muted, fontSize: 15 },
-  navigation: { flexDirection: "row", gap: space.lg },
+  text: {
+    color: playerColor.muted,
+    fontSize: 13,
+    lineHeight: 21,
+    textAlign: "center",
+    maxWidth: 360,
+  },
+  navigation: {
+    flexDirection: "row",
+    gap: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: playerColor.border,
+    paddingTop: space.md,
+  },
 });
