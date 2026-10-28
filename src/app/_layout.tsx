@@ -1,5 +1,4 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
-import { Observe, ObserveRoot } from "expo-observe";
 import { StatusBar } from "expo-status-bar";
 import { useMemo } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -9,12 +8,20 @@ import { ToastProvider } from "@/components/toast";
 import { playerColor } from "@/constants/theme";
 import { MovieProvider } from "@/context/movie-store";
 import { SeriesProvider } from "@/context/series-store";
-import {
-  ThemeSettingsProvider,
-  useTheme,
-} from "@/context/theme-store";
+import { ThemeSettingsProvider, useTheme } from "@/context/theme-store";
 
-Observe.configure({ integrations: { "expo-router": true } });
+type ObserveModule = typeof import("expo-observe");
+
+// expo-observe needs the ExpoAppMetrics native module. If this dev build
+// was compiled without it, skip observability instead of crashing.
+let ObserveRoot: ObserveModule["ObserveRoot"] | undefined;
+try {
+  const mod: ObserveModule = require("expo-observe");
+  mod.Observe.configure({ integrations: { "expo-router": true } });
+  ObserveRoot = mod.ObserveRoot;
+} catch (e) {
+  console.warn("expo-observe unavailable in this build, skipping:", e);
+}
 
 function ThemedApp() {
   const { color, scheme } = useTheme();
@@ -88,4 +95,4 @@ function RootLayout() {
   );
 }
 
-export default ObserveRoot.wrap(RootLayout);
+export default ObserveRoot ? ObserveRoot.wrap(RootLayout) : RootLayout;
